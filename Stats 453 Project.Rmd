@@ -11,16 +11,70 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ### Introduction & Motivation
 
-### Data Description
+Employment turnover, which is the measurement of the number of employees who leave an organization during a specified time period, is essential to both the companies as well as employees. The length of service varies in different profession, organization. For example, the higher turnover rate of a company compared to others in the same industry might suggest that employees are suffering from excessive workload. However, the high turnover rate in the finance industry indicates the fast pace of natural career progression in that industry. Therefore, it is important to know what causes the employees to leave the company; and we would study this by examining key factors that might affect the length of service using survival analysis.
 
-### Data Processing
+### Data Description
+This dataset contains information of ... Below is the detailed description of variables in this dataset:
+
++ ``: 
+
+We would use `stag` as the dependent variable because it reflects the length of service (survival time) of an individual. ...
+
 
 ### Survival Models
 
-### Robustness Analysis
+In our analysis, we would employ three approaches: parametric, non-parametric, and CoxPH models and see if they reach the same conclusions. In our parametric models, we would build three classical parametric model in survival analysis and then conduct AIC and LRT to choose the ideal parametric setting; and then, we would continue using AIC and LRT tests for variable selection. In our non-parametric analysis, we would examine the effect of the key variables informed by our parametric model on the survival time and check if the conclusions are consistent.
+
+#### Parametric Estimation
+
+```{r}
+m1 = survreg( Surv(stag,event) ~ gender+age+ factor(profession)+ head_gender + way + independ + selfcontrol, dist='weibull', data=Employ )
+summary(m2)
+```
+
+
+```{r}
+m2 = survreg( Surv(stag,event) ~ gender+age+ factor(profession)+ head_gender + way + independ + selfcontrol, dist='lognormal', data=Employ )
+summary(m3)
+```
+
+```{r}
+m3 = survreg( Surv(stag,event) ~ gender+age+ factor(profession)+ head_gender + way + independ + selfcontrol, dist='exponential', data=Employ )
+summary(m2)
+```
+
+
+#### Non-Parametric Estimation
+
+```{r}
+m4 = survfit( Surv(stag,event) ~ gender+age+ factor(profession)+ head_gender + way + independ + selfcontrol, data=Employ  )
+summary(m4)
+
+```
+
+
+#### Semi-parametric Approach: CoxPH 
+
+why results do not match residual plot? cancel out?  why profession has time-varying effect? 
+```{r}
+m5 = coxph( Surv(stag,event) ~  gender+age+ factor(profession)+ head_gender + way + independ + selfcontrol, data=Employ  )
+summary(m5)
+
+cox.zph(m5)
+plot(cox.zph(m5))
+```
+
+```{r}
+m6 = coxph( Surv(start,stop, event) ~  age + age:stop , data=Employ )
+```
+
+
 
 ### Conclusion
 
 ### Limitation
 
+There are several limitations in our analysis. First, the data was collected in Russia; therefore, it might be problematic if we try to extrapolate to other countries. Second, there are many parametric settings, and we only choose three of those; it is possible that other parametric models might lead us to different conclusions. Third, we select key variables after choosing the parametric settings; however, it is also possible that we omit a variable due to the order of our analysis. For example, another variable might be significant in exponential model but it is insignificant in weibull model. 
+
 ### References
+
