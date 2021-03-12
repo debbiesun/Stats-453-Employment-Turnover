@@ -201,8 +201,8 @@ library(survival)
 library(survminer)
 library(stargazer)
 Employ = read.csv(&#39;turnover.csv&#39;)</code></pre>
-<div id="title" class="section level2">
-<h2>Title</h2>
+<div id="survival-analysis-on-employee-turnover" class="section level2">
+<h2>Survival Analysis on Employee Turnover</h2>
 <div id="introduction-motivation" class="section level3">
 <h3>Introduction &amp; Motivation</h3>
 <p>Employment turnover, which is the measurement of the number of employees who leave an organization during a specified time period, is essential to both the companies as well as employees. The length of service varies in different profession, organization. For example, the higher turnover rate of a company compared to others in the same industry might suggest that employees are suffering from excessive workload. However, the high turnover rate in the finance industry indicates the fast pace of natural career progression in that industry. That is why in past years, many researchers were intrigued by the key determination of turnover rate. In the year of 2000, three scientists examine the interrelationships between employee turnovers by combining all existing literature on employee turnover. Their research resulted in a meta-analysis of over 60, 000 employees. Therefore, it is important to know what causes the employees to leave the company; and we would study this by examining key factors that might affect the length of service using survival analysis. Therefore, it is important to know what causes the employees to leave the company; and we would study this by examining key factors that might affect the length of service using survival analysis.</p>
@@ -229,7 +229,7 @@ m2 = survreg( Surv(stag,event) ~ gender+age+ factor(profession)+ head_gender + w
 <pre class="r"><code># Exponential model
 m3 = survreg( Surv(stag,event) ~ gender+age+ factor(profession)+ head_gender + way + independ + selfcontrol, dist=&#39;exponential&#39;, data=Employ )</code></pre>
 <pre class="r"><code>stargazer(m1, m2, m3, title=&quot; Results&quot;,align=TRUE, dep.var.labels=c(&quot;Service&quot;),type = &#39;html&#39;,
-covariate.labels=c(&quot;gender&quot;,&quot;age&quot;,&quot;BusinessDevelopment&quot;,&quot;Commercial&quot;,&quot;Consult&quot;,&quot;Engineer&quot;, &quot;etc&quot;,&quot;Finance&quot;,&quot;HR&quot;,&quot;IT&quot;,&quot;Law&quot;,&quot;manage&quot;,&quot;Marketing&quot;,&quot;PR&quot;,&quot;Sales&quot;, &quot;Teaching&quot;,&quot;head&quot;,&quot;waycar&quot;,&quot;wayfoot&quot;,&quot;independ&quot;,&quot;selfcontrol &quot;))</code></pre>
+covariate.labels=c(&quot;gender&quot;,&quot;age&quot;,&quot;BusinessDevelopment&quot;,&quot;Commercial&quot;,&quot;Consult&quot;,&quot;Engineer&quot;, &quot;Other professions&quot;,&quot;Finance&quot;,&quot;HR&quot;,&quot;IT&quot;,&quot;Law&quot;,&quot;manage&quot;,&quot;Marketing&quot;,&quot;PR&quot;,&quot;Sales&quot;, &quot;Teaching&quot;,&quot;gender of head&quot;,&quot;car&quot;,&quot;foot&quot;,&quot;independ&quot;,&quot;selfcontrol &quot;))</code></pre>
 <table style="text-align:center">
 <caption>
 <strong>Results</strong>
@@ -512,7 +512,7 @@ Engineer
 </tr>
 <tr>
 <td style="text-align:left">
-etc
+Other professions
 </td>
 <td>
 -0.786<sup>*</sup>
@@ -882,7 +882,7 @@ Teaching
 </tr>
 <tr>
 <td style="text-align:left">
-head
+gender of head
 </td>
 <td>
 -0.028
@@ -919,7 +919,7 @@ head
 </tr>
 <tr>
 <td style="text-align:left">
-waycar
+car
 </td>
 <td>
 0.204<sup>**</sup>
@@ -956,7 +956,7 @@ waycar
 </tr>
 <tr>
 <td style="text-align:left">
-wayfoot
+foot
 </td>
 <td>
 0.456<sup>***</sup>
@@ -1178,65 +1178,11 @@ AIC</code></pre>
 <p>We find out that Weibull model is the best model for parametric estimation. Next, we want to investigate the appropriate set of variables for our Weibull model.</p>
 <p>We will continue to use the AIC to find the appropriate set of parameters. Furthermore, we incorporate the Likelihoods Ratio Tests (LRT) to ensure the results of AIC. The likelihood-ratio test assesses the goodness of fit of two competing statistical models based on the ratio of their likelihoods, specifically one found by maximization over the entire parameter space and another found after imposing some constraint. If the constraint (i.e., the null hypothesis) is supported by the observed data, the two likelihoods should not differ by more than sampling error. Thus the likelihood-ratio test tests whether this ratio is significantly different from one, or equivalently whether its natural logarithm is significantly different from zero.</p>
 <p>First, we have the original set of parameters. Next, we are going to assess if we should include <code>head-gender</code>, <code>independ</code>, and <code>gender</code>, which have the largest P-value (insignificance) in our Weibull model. Then, we would use the AIC test to determine whether we should include these variables.</p>
-<pre class="r"><code>m4 = survreg( Surv(stag,event) ~ age+ factor(profession) + way + selfcontrol, dist=&#39;weibull&#39;, data=Employ )
-summary(m4)</code></pre>
-<pre><code>## 
-## Call:
-## survreg(formula = Surv(stag, event) ~ age + factor(profession) + 
-##     way + selfcontrol, data = Employ, dist = &quot;weibull&quot;)
-##                                          Value Std. Error     z       p
-## (Intercept)                            5.04694    0.42394 11.90 &lt; 2e-16
-## age                                   -0.01968    0.00555 -3.55 0.00039
-## factor(profession)BusinessDevelopment -0.57892    0.43498 -1.33 0.18322
-## factor(profession)Commercial          -0.99824    0.43638 -2.29 0.02216
-## factor(profession)Consult             -0.89902    0.43711 -2.06 0.03971
-## factor(profession)Engineer            -1.00351    0.46083 -2.18 0.02943
-## factor(profession)etc                 -0.79032    0.42105 -1.88 0.06052
-## factor(profession)Finance             -0.45988    0.45190 -1.02 0.30883
-## factor(profession)HR                  -0.57848    0.37311 -1.55 0.12103
-## factor(profession)IT                  -0.19157    0.41163 -0.47 0.64166
-## factor(profession)Law                 -0.63075    0.54629 -1.15 0.24825
-## factor(profession)manage              -1.24431    0.43734 -2.85 0.00444
-## factor(profession)Marketing           -0.95540    0.41918 -2.28 0.02266
-## factor(profession)PR                  -1.00167    0.55227 -1.81 0.06972
-## factor(profession)Sales               -0.66294    0.39992 -1.66 0.09738
-## factor(profession)Teaching            -0.85867    0.45623 -1.88 0.05982
-## waycar                                 0.22116    0.08713  2.54 0.01114
-## wayfoot                                0.44479    0.14851  3.00 0.00274
-## selfcontrol                            0.05398    0.01939  2.78 0.00537
-## Log(scale)                            -0.10507    0.03283 -3.20 0.00137
-## 
-## Scale= 0.9 
-## 
-## Weibull distribution
-## Loglik(model)= -2983.1   Loglik(intercept only)= -3014.3
-##  Chisq= 62.25 on 18 degrees of freedom, p= 8.8e-07 
-## Number of Newton-Raphson Iterations: 7 
-## n= 1129</code></pre>
+<pre class="r"><code>m4 = survreg( Surv(stag,event) ~ age+ factor(profession) + way + selfcontrol, dist=&#39;weibull&#39;, data=Employ )</code></pre>
 <p>The AIC score of simpler model is 6006.2, which is lower than the original Weibull model that has all parameters. However, we still find out that some of the parameters in <code>profession</code> has high P-value, and ‘profession’ generates 14 parameters because it is categorical. Therefore, we also want to see we should incorporate ‘profession’ in our model.</p>
-<pre class="r"><code>m5 = survreg( Surv(stag,event) ~ age + way + selfcontrol, dist=&#39;weibull&#39;, data=Employ )
-summary(m5)</code></pre>
-<pre><code>## 
-## Call:
-## survreg(formula = Surv(stag, event) ~ age + way + selfcontrol, 
-##     data = Employ, dist = &quot;weibull&quot;)
-##                Value Std. Error     z       p
-## (Intercept)  4.46997    0.20311 22.01 &lt; 2e-16
-## age         -0.02142    0.00546 -3.92 8.8e-05
-## waycar       0.23589    0.08434  2.80  0.0052
-## wayfoot      0.40740    0.14700  2.77  0.0056
-## selfcontrol  0.05706    0.01907  2.99  0.0028
-## Log(scale)  -0.09675    0.03272 -2.96  0.0031
-## 
-## Scale= 0.908 
-## 
-## Weibull distribution
-## Loglik(model)= -2996.8   Loglik(intercept only)= -3014.3
-##  Chisq= 34.94 on 4 degrees of freedom, p= 4.8e-07 
-## Number of Newton-Raphson Iterations: 6 
-## n= 1129</code></pre>
+<pre class="r"><code>m5 = survreg( Surv(stag,event) ~ age + way + selfcontrol, dist=&#39;weibull&#39;, data=Employ )</code></pre>
 <pre class="r"><code>stargazer(m4, m5, title=&quot; Results&quot;,align=TRUE, dep.var.labels=c(&quot;Service&quot;),type = &#39;html&#39;,
-covariate.labels=c(&quot;gender&quot;,&quot;age&quot;,&quot;BusinessDevelopment&quot;,&quot;Commercial&quot;,&quot;Consult&quot;,&quot;Engineer&quot;, &quot;etc&quot;,&quot;Finance&quot;,&quot;HR&quot;,&quot;IT&quot;,&quot;Law&quot;,&quot;manage&quot;,&quot;Marketing&quot;,&quot;PR&quot;,&quot;Sales&quot;, &quot;Teaching&quot;,&quot;head&quot;,&quot;waycar&quot;,&quot;wayfoot&quot;,&quot;independ&quot;,&quot;selfcontrol &quot;))</code></pre>
+covariate.labels=c(&quot;age&quot;,&quot;BusinessDevelopment&quot;,&quot;Commercial&quot;,&quot;Consult&quot;,&quot;Engineer&quot;, &quot;Other professions&quot;,&quot;Finance&quot;,&quot;HR&quot;,&quot;IT&quot;,&quot;Law&quot;,&quot;manage&quot;,&quot;Marketing&quot;,&quot;PR&quot;,&quot;Sales&quot;, &quot;Teaching&quot;,&quot;car&quot;,&quot;foot&quot;,&quot;selfcontrol&quot;))</code></pre>
 <table style="text-align:center">
 <caption>
 <strong>Results</strong>
@@ -1281,7 +1227,7 @@ Service
 </tr>
 <tr>
 <td style="text-align:left">
-gender
+age
 </td>
 <td>
 -0.020<sup>***</sup>
@@ -1310,7 +1256,7 @@ gender
 </tr>
 <tr>
 <td style="text-align:left">
-age
+BusinessDevelopment
 </td>
 <td>
 -0.579
@@ -1337,7 +1283,7 @@ age
 </tr>
 <tr>
 <td style="text-align:left">
-BusinessDevelopment
+Commercial
 </td>
 <td>
 -0.998<sup>**</sup>
@@ -1364,7 +1310,7 @@ BusinessDevelopment
 </tr>
 <tr>
 <td style="text-align:left">
-Commercial
+Consult
 </td>
 <td>
 -0.899<sup>**</sup>
@@ -1391,7 +1337,7 @@ Commercial
 </tr>
 <tr>
 <td style="text-align:left">
-Consult
+Engineer
 </td>
 <td>
 -1.004<sup>**</sup>
@@ -1418,7 +1364,7 @@ Consult
 </tr>
 <tr>
 <td style="text-align:left">
-Engineer
+Other professions
 </td>
 <td>
 -0.790<sup>*</sup>
@@ -1445,7 +1391,7 @@ Engineer
 </tr>
 <tr>
 <td style="text-align:left">
-etc
+Finance
 </td>
 <td>
 -0.460
@@ -1472,7 +1418,7 @@ etc
 </tr>
 <tr>
 <td style="text-align:left">
-Finance
+HR
 </td>
 <td>
 -0.578
@@ -1499,7 +1445,7 @@ Finance
 </tr>
 <tr>
 <td style="text-align:left">
-HR
+IT
 </td>
 <td>
 -0.192
@@ -1526,7 +1472,7 @@ HR
 </tr>
 <tr>
 <td style="text-align:left">
-IT
+Law
 </td>
 <td>
 -0.631
@@ -1553,7 +1499,7 @@ IT
 </tr>
 <tr>
 <td style="text-align:left">
-Law
+manage
 </td>
 <td>
 -1.244<sup>***</sup>
@@ -1580,7 +1526,7 @@ Law
 </tr>
 <tr>
 <td style="text-align:left">
-manage
+Marketing
 </td>
 <td>
 -0.955<sup>**</sup>
@@ -1607,7 +1553,7 @@ manage
 </tr>
 <tr>
 <td style="text-align:left">
-Marketing
+PR
 </td>
 <td>
 -1.002<sup>*</sup>
@@ -1634,7 +1580,7 @@ Marketing
 </tr>
 <tr>
 <td style="text-align:left">
-PR
+Sales
 </td>
 <td>
 -0.663<sup>*</sup>
@@ -1661,7 +1607,7 @@ PR
 </tr>
 <tr>
 <td style="text-align:left">
-Sales
+Teaching
 </td>
 <td>
 -0.859<sup>*</sup>
@@ -1688,7 +1634,7 @@ Sales
 </tr>
 <tr>
 <td style="text-align:left">
-Teaching
+car
 </td>
 <td>
 0.221<sup>**</sup>
@@ -1717,7 +1663,7 @@ Teaching
 </tr>
 <tr>
 <td style="text-align:left">
-head
+foot
 </td>
 <td>
 0.445<sup>***</sup>
@@ -1746,7 +1692,7 @@ head
 </tr>
 <tr>
 <td style="text-align:left">
-waycar
+selfcontrol
 </td>
 <td>
 0.054<sup>***</sup>
@@ -1775,7 +1721,7 @@ waycar
 </tr>
 <tr>
 <td style="text-align:left">
-wayfoot
+Constant
 </td>
 <td>
 5.047<sup>***</sup>
@@ -1911,31 +1857,193 @@ ggsurvplot(m8)</code></pre>
 <p>HR &lt; 1: Reduction in the hazard</p>
 <p>HR &gt; 1: Increase in Hazard</p>
 <pre class="r"><code>m9 = coxph( Surv(stag,event) ~  age + way + selfcontrol, data=Employ  )
-summary(m9)</code></pre>
-<pre><code>## Call:
-## coxph(formula = Surv(stag, event) ~ age + way + selfcontrol, 
-##     data = Employ)
-## 
-##   n= 1129, number of events= 571 
-## 
-##                 coef exp(coef) se(coef)      z Pr(&gt;|z|)    
-## age          0.02309   1.02336  0.00611  3.778 0.000158 ***
-## waycar      -0.26544   0.76687  0.09389 -2.827 0.004698 ** 
-## wayfoot     -0.45513   0.63436  0.16186 -2.812 0.004926 ** 
-## selfcontrol -0.06037   0.94142  0.02103 -2.870 0.004103 ** 
-## ---
-## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
-## 
-##             exp(coef) exp(-coef) lower .95 upper .95
-## age            1.0234     0.9772    1.0112    1.0357
-## waycar         0.7669     1.3040    0.6380    0.9218
-## wayfoot        0.6344     1.5764    0.4619    0.8712
-## selfcontrol    0.9414     1.0622    0.9034    0.9810
-## 
-## Concordance= 0.572  (se = 0.013 )
-## Likelihood ratio test= 33.66  on 4 df,   p=9e-07
-## Wald test            = 33.66  on 4 df,   p=9e-07
-## Score (logrank) test = 33.84  on 4 df,   p=8e-07</code></pre>
+stargazer(m9,type = &#39;html&#39;)</code></pre>
+<table style="text-align:center">
+<tr>
+<td colspan="2" style="border-bottom: 1px solid black">
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+<em>Dependent variable:</em>
+</td>
+</tr>
+<tr>
+<td>
+</td>
+<td colspan="1" style="border-bottom: 1px solid black">
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+stag
+</td>
+</tr>
+<tr>
+<td colspan="2" style="border-bottom: 1px solid black">
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+age
+</td>
+<td>
+0.023<sup>***</sup>
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+(0.006)
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+waycar
+</td>
+<td>
+-0.265<sup>***</sup>
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+(0.094)
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+wayfoot
+</td>
+<td>
+-0.455<sup>***</sup>
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+(0.162)
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+selfcontrol
+</td>
+<td>
+-0.060<sup>***</sup>
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+(0.021)
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td colspan="2" style="border-bottom: 1px solid black">
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+Observations
+</td>
+<td>
+1,129
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+R<sup>2</sup>
+</td>
+<td>
+0.029
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+Max. Possible R<sup>2</sup>
+</td>
+<td>
+0.998
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+Log Likelihood
+</td>
+<td>
+-3,453.470
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+Wald Test
+</td>
+<td>
+33.660<sup>***</sup> (df = 4)
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+LR Test
+</td>
+<td>
+33.663<sup>***</sup> (df = 4)
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+Score (Logrank) Test
+</td>
+<td>
+33.844<sup>***</sup> (df = 4)
+</td>
+</tr>
+<tr>
+<td colspan="2" style="border-bottom: 1px solid black">
+</td>
+</tr>
+<tr>
+<td style="text-align:left">
+<em>Note:</em>
+</td>
+<td style="text-align:right">
+<sup><em></sup>p&lt;0.1; <sup><strong></sup>p&lt;0.05; <sup></strong></em></sup>p&lt;0.01
+</td>
+</tr>
+</table>
 <pre class="r"><code>cox.zph(m9)</code></pre>
 <pre><code>##             chisq df    p
 ## age         0.415  1 0.52

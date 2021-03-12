@@ -83,7 +83,7 @@ m3 = survreg( Surv(stag,event) ~ gender+age+ factor(profession)+ head_gender + w
 
 ```{r, results='asis'}
 stargazer(m1, m2, m3, title=" Results",align=TRUE, dep.var.labels=c("Service"),type = 'html',
-covariate.labels=c("gender","age","BusinessDevelopment","Commercial","Consult","Engineer", "etc","Finance","HR","IT","Law","manage","Marketing","PR","Sales", "Teaching","head","waycar","wayfoot","independ","selfcontrol "))
+covariate.labels=c("gender","age","BusinessDevelopment","Commercial","Consult","Engineer", "Other professions","Finance","HR","IT","Law","manage","Marketing","PR","Sales", "Teaching","gender of head","car","foot","independ","selfcontrol "))
 ```
 
 
@@ -118,7 +118,7 @@ m5 = survreg( Surv(stag,event) ~ age + way + selfcontrol, dist='weibull', data=E
 
 ```{r, results='asis'}
 stargazer(m4, m5, title=" Results",align=TRUE, dep.var.labels=c("Service"),type = 'html',
-covariate.labels=c("gender","age","BusinessDevelopment","Commercial","Consult","Engineer", "etc","Finance","HR","IT","Law","manage","Marketing","PR","Sales", "Teaching","head","waycar","wayfoot","independ","selfcontrol "))
+covariate.labels=c("age","BusinessDevelopment","Commercial","Consult","Engineer", "Other professions","Finance","HR","IT","Law","manage","Marketing","PR","Sales", "Teaching","car","foot","selfcontrol"))
 ```
 
 ```{r}
@@ -213,13 +213,16 @@ HR < 1: Reduction in the hazard
 HR > 1: Increase in Hazard
 
 
-```{r}
+```{r,results='asis'}
 m9 = coxph( Surv(stag,event) ~  age + way + selfcontrol, data=Employ  )
-summary(m9)
+stargazer(m9,type = 'html')
 
+```
+```{r}
 cox.zph(m9)
 plot(cox.zph(m9))
 ```
+
 
 According to the test on the PH assumption, neither of them is significant because their p-value are very large. This is also consistent with the residual plot as the fitted curves are relatively flat over time. However, the curve for age seems to go down at the end, and we might have a different conclusion if we could have more observations. Therefore, neither of them seems to have a time-varying effect, but it could also due to the limited number of observations. 
 
