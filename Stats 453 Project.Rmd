@@ -11,13 +11,16 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r,message=FALSE}
 library(dplyr)
-library(stargazer)
+
 library(survival)
 library(survminer)
+library(stargazer)
 Employ = read.csv('turnover.csv')
 ```
 
-## Title
+
+
+## Survival Analysis on Employee Turnover
 
 ### Introduction & Motivation
 
@@ -58,8 +61,9 @@ Akaike's Information Criterion (AIC): AIC is an estimator of prediction error an
 Weibull model has the lowest AIC score among these three models. Thus, we conclude that Weibull model is the best model in our parametric estimation. 
 ```{r}
 # Weibull AFT model 
+Employ = Employ%>%
+  mutate(profession = replace(profession,profession == "Finan\xf1e","Finance"))
 m1 = survreg( Surv(stag,event) ~ gender+age+ factor(profession)+ head_gender + way + independ + selfcontrol, dist='weibull', data=Employ )
-summary(m1)
 ```
 
 
@@ -67,24 +71,22 @@ summary(m1)
 ```{r}
 # Log-normal model 
 m2 = survreg( Surv(stag,event) ~ gender+age+ factor(profession)+ head_gender + way + independ + selfcontrol, dist='lognormal', data=Employ )
-summary(m2)
 ```
 
 
 ```{r}
 # Exponential model
 m3 = survreg( Surv(stag,event) ~ gender+age+ factor(profession)+ head_gender + way + independ + selfcontrol, dist='exponential', data=Employ )
-summary(m3)
 ```
 
 
-```{r}
-stargazer(m1, m2, m3, title=" Results",
-align=TRUE, dep.var.labels=c("Survival time (length of service)"),
-covariate.labels=c("gender","age",
-"BusinessDevelopment","Commercial ","Consult","Engineer", "etc ","Finan\xf1e","HR ","IT","Law","manage","Marketing","PR","Sales", "Teaching","head_genderm ","waycar","wayfoot","independ","selfcontrol "),
-omit.stat=c("LL","ser","f"), no.space=TRUE)
+
+```{r, results='asis'}
+stargazer(m1, m2, m3, title=" Results",align=TRUE, dep.var.labels=c("Service"),type = 'html',
+covariate.labels=c("gender","age","BusinessDevelopment","Commercial","Consult","Engineer", "etc","Finance","HR","IT","Law","manage","Marketing","PR","Sales", "Teaching","head","waycar","wayfoot","independ","selfcontrol "))
 ```
+
+
 ```{r}
 AIC <- tibble(
   Model = c("Exponential", "Weibull", "Lognormal"),
@@ -98,23 +100,26 @@ Since the AIC score of the Weibull model is the smallest, we would continue our 
 ##### Variable Selection. 
 We find out that Weibull model is the best model for parametric estimation. Next, we want to investigate the appropriate set of variables for our Weibull model. 
 
-[Maybe using LRT as well, and introduce and explain what LRT is]
+We will continue to use the AIC to find the appropriate set of parameters. Furthermore, we incorporate the Likelihoods Ratio Tests (LRT) to ensure the results of AIC. The likelihood-ratio test assesses the goodness of fit of two competing statistical models based on the ratio of their likelihoods, specifically one found by maximization over the entire parameter space and another found after imposing some constraint. If the constraint (i.e., the null hypothesis) is supported by the observed data, the two likelihoods should not differ by more than sampling error. Thus the likelihood-ratio test tests whether this ratio is significantly different from one, or equivalently whether its natural logarithm is significantly different from zero.
 
 First, we have the original set of parameters. Next, we are going to assess if we should include `head-gender`, `independ`, and `gender`, which have the largest P-value (insignificance) in our Weibull model. Then, we would use the AIC test to determine whether we should include these variables. 
 
 ```{r}
 m4 = survreg( Surv(stag,event) ~ age+ factor(profession) + way + selfcontrol, dist='weibull', data=Employ )
-summary(m4)
 ```
 
 The AIC score of simpler model is 6006.2, which is lower than the original Weibull model that has all parameters. However, we still find out that some of the parameters in `profession` has high P-value, and 'profession' generates 14 parameters because it is categorical. Therefore, we also want to see we should incorporate 'profession' in our model. 
 
-Then we find out that some of the parameters in `profession` has high P-value, so we want to see if the model without `profession` has a lower AIC or not. 
+
+
 ```{r}
 m5 = survreg( Surv(stag,event) ~ age + way + selfcontrol, dist='weibull', data=Employ )
-summary(m5)
 ```
 
+```{r, results='asis'}
+stargazer(m4, m5, title=" Results",align=TRUE, dep.var.labels=c("Service"),type = 'html',
+covariate.labels=c("gender","age","BusinessDevelopment","Commercial","Consult","Engineer", "etc","Finance","HR","IT","Law","manage","Marketing","PR","Sales", "Teaching","head","waycar","wayfoot","independ","selfcontrol "))
+```
 
 ```{r}
 AIC_w=tibble(
@@ -124,7 +129,31 @@ AIC_w=tibble(
 AIC_w
 ```
 
-According to the AIC score of all three models, we think that it is reasonable to include age, way, and self control in our model because its AIC score is the smallest. Based on this information, we would continue our analysis with these variables in the non-parametric and semi-parametric settings.
+According to the AIC score of all three models, we think that it is reasonable to include age, way, and self control in our model because its AIC score is the smallest. However, we would also want to see if we can reach the same conclusion using LRT.
+
+```{r,include=FALSE}
+m1$loglik
+m4$loglik
+m5$loglik
+
+# Test=statistics
+2*(-2982.099-(-2996.805))
+
+#  P-value 
+1-pchisq(29.412, df = 17)
+
+```
+
+```{r}
+LRT=tibble(
+  Model = c("All predictors vs. age, profession,way,self control", "age, way, self control vs. age, profession,way,self control", "All predictors vs. age, way, self control"),
+  Test_statistics = c(2.1,27.312,29.412),
+  P_value=c(0.5519128, 0.01753144,0.03091084)
+  )
+LRT
+```
+
+It's surprising that model 1 which includes all predictors is better than model 4 which includes age, profession,way,self control. However, we would still choose the model with age, way, self control because it is statistically better than the other two models, which is consistent with the AIC. Since the LRT agrees with AIC, which indicates that the model with "age, way, self control" is the best model in our analysis; we would continue our analysis with these variables in the non-parametric and semi-parametric settings.
 
 #### Non-Parametric Estimation
 
@@ -153,7 +182,36 @@ Based on the graph, we can see that people who self-reported to be more self-con
 
 #### Semi-parametric Approach: CoxPH 
 
-[introduce COX PH and hazard ratio concepts]
+The purpose of the model is to evaluate simultaneously the effect of several factors on survival. In other words, it allows us to examine how specified factors influence the rate of a particular event happening (e.g., infection, death) at a particular point in time. This rate is commonly referred as the hazard rate. 
+
+The Cox model is expressed by the hazard function denoted by h(t), and the model assumes that the risk of failure of two groups is always proportional. Briefly, the hazard function can be interpreted as the risk of dying at time t. It can be estimated as follow:
+
+\[h(t)=h_0(t)×e^{b_1x_1+b_2x_2+...+b_px_p}\]
+
+where, t represents the survival time
+
+h(t) is the hazard function determined by a set of p covariates (x1,x2,...,xp)
+
+the coefficients (b1,b2,...,bp) measure the impact (i.e., the effect size) of covariates.
+
+the term $h_0$ is called the baseline hazard. It corresponds to the value of the hazard if all the xi
+ are equal to zero (the quantity exp(0) equals 1). The ‘t’ in h(t) reminds us that the hazard may vary over time.
+ 
+The Cox model can be written as a multiple linear regression of the logarithm of the hazard on the variables xi, with the baseline hazard being an ‘intercept’ term that varies with time.
+
+The quantities exp(bi)are called hazard ratios (HR). 
+A value of bi greater than zero, or equivalently a hazard ratio greater than one, indicates that as the value of the ith covariate increases, the event hazard increases and thus the length of survival decreases.
+
+Put another way, a hazard ratio above 1 indicates a covariate that is positively associated with the event probability, and thus negatively associated with the length of survival.
+
+In summary,
+
+HR = 1: No effect
+
+HR < 1: Reduction in the hazard
+
+HR > 1: Increase in Hazard
+
 
 ```{r}
 m9 = coxph( Surv(stag,event) ~  age + way + selfcontrol, data=Employ  )
@@ -167,9 +225,13 @@ According to the test on the PH assumption, neither of them is significant becau
 
 ### Conclusion
 
+In our parametric and non-parametric approach, we find out that, on average, younger individuals tend to have longer survival times. In other words, as we set three age ranges, the younger age range stay longer in one company. Moreover, the more convenient one commutes, the longer one will stay in one company. (One goes to work by foot has the longest survival times, and one goes to work by bus has the shortest survival time). For self control score, the one with higher self-control score tends to have longer survival times. In our semi-parametric model, we find out that these three predictors do not have time-varying impact (The PH assumption holds). 
+
 ### Limitation
 
 There are several limitations in our analysis. First, the data was collected in Russia; therefore, it might be problematic if we try to extrapolate to other countries. Second, there are many parametric settings, and we only choose three of those; it is possible that other parametric models might lead us to different conclusions. Third, we select key variables after choosing the parametric settings; however, it is also possible that we omit a variable due to the order of our analysis. For example, another variable might be significant in exponential model but it is insignificant in weibull model. 
 
 ### References
+
+In our parametric and non-parametric approach, we find out that, on average, younger individuals tend to have longer survival times. In other words, as we set three age ranges, the younger age range stay longer in one company. Moreover, the more convenient one commutes, the longer one will stay in one company. (One goes to work by foot has the longest survival times, and one goes to work by bus has the shortest survival time). For self control score, the one with higher self-control score tends to have longer survival times. In our semi-parametric model, we find out that these three predictors do not have time-varying impact (The PH assumption holds). 
 
