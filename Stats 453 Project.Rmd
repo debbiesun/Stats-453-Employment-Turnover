@@ -98,6 +98,8 @@ Since the AIC score of the Weibull model is the smallest, we would continue our 
 ##### Variable Selection. 
 We find out that Weibull model is the best model for parametric estimation. Next, we want to investigate the appropriate set of variables for our Weibull model. 
 
+[Maybe using LRT as well, and introduce and explain what LRT is]
+
 First, we have the original set of parameters. Next, we are going to assess if we should include `head-gender`, `independ`, and `gender`, which have the largest P-value (insignificance) in our Weibull model. Then, we would use the AIC test to determine whether we should include these variables. 
 
 ```{r}
@@ -147,7 +149,7 @@ According to the graph above, we can see that at the first ten months approximat
 m8 = survfit( Surv(stag,event) ~ scCat, data=Employ  )
 ggsurvplot(m8)
 ```
-
+Based on the graph, we can see that people who self-reported to be more self-control are more likely to stay in their companies longer. It is also interesting that the length of service of the groups of 0-4 and 4-8 are very similar, it might suggest that employees who are extremely disciplined would be more likely to continue working in the same company. However, we cut the quantitative variable into 3 categories, and we didn't show the survival probabilities of other employees with greater details. Therefore, we only know that the length of service of more self-controlled employees are longer but we can't be certain on how it affects the turnover rate specifically.
 
 #### Semi-parametric Approach: CoxPH 
 
