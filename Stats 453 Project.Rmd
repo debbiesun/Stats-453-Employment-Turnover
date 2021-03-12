@@ -9,16 +9,41 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+```{r}
+library(dplyr)
+library(stargazer)
+library(survival)
+library(survminer)
+Employ = read.csv('turnover.csv')
+```
+
+## Title
+
 ### Introduction & Motivation
 
-Employment turnover, which is the measurement of the number of employees who leave an organization during a specified time period, is essential to both the companies as well as employees. The length of service varies in different profession, organization. For example, the higher turnover rate of a company compared to others in the same industry might suggest that employees are suffering from excessive workload. However, the high turnover rate in the finance industry indicates the fast pace of natural career progression in that industry. Therefore, it is important to know what causes the employees to leave the company; and we would study this by examining key factors that might affect the length of service using survival analysis.
+Employment turnover, which is the measurement of the number of employees who leave an organization during a specified time period, is essential to both the companies as well as employees. The length of service varies in different profession, organization. For example, the higher turnover rate of a company compared to others in the same industry might suggest that employees are suffering from excessive workload. However, the high turnover rate in the finance industry indicates the fast pace of natural career progression in that industry. That is why in past years, many researchers were intrigued by the key determination of turnover rate. In the year of 2000, three scientists examine the interrelationships between employee turnovers by combining all existing literature on employee turnover. Their research resulted in a meta-analysis of over 60, 000 employees. Therefore, it is important to know what causes the employees to leave the company; and we would study this by examining key factors that might affect the length of service using survival analysis. Therefore, it is important to know what causes the employees to leave the company; and we would study this by examining key factors that might affect the length of service using survival analysis.
 
 ### Data Description
-This dataset contains information of ... Below is the detailed description of variables in this dataset:
+We found this dataset form Kaggle, which is a real dataset shared from Edward Babushkin’s blog to predict an Employee’s risk of quitting. This dataset contains information of employee turnover data, which includes each individual's information. Below is the detailed description of variables in this dataset:
 
-+ ``: 
+`stag`: number of months that each individual stayed in one company. 
+`event`:  0=censored, 1= exact observation. 
+`gender`: m=male, f=female
+`age`: age in years 
+`industry`: industry of the company that each individual worked for 
+`profession`: profession of each individual
+`traffic`: From what pipelene employee came to the company
+`coach`: Presence of a coach on probation
+`head_gender`: the gender of the head. m=male, f=female
+`way`: Employee's way of transportation 
+`greywage`: The salary does not seem to the tax authorities
+`independ`: Independent score
+`selfcontrol`: Selfcontrol score
+`anxiety`: Anxiety score
+`extraversion`: Extroversion score
+`novator`: Novator score
 
-We would use `stag` as the dependent variable because it reflects the length of service (survival time) of an individual. ...
+We would use `stag` as the dependent variable because it reflects the length of service (survival time) of an individual.
 
 
 ### Survival Models
@@ -27,48 +52,109 @@ In our analysis, we would employ three approaches: parametric, non-parametric, a
 
 #### Parametric Estimation
 
+Akaike's Information Criterion (AIC): AIC is an estimator of prediction error and thereby relative quality of statistical models for a given set of data. AIC estimates the relative amount of information lost by a given model: the less information a model loses, the higher the quality of that model. AIC penalizes larger models, thus, the model with a lower AIC score is better than a bigger AIC score. 
+
+
+Weibull model has the lowest AIC score among these three models. Thus, we conclude that Weibull model is the best model in our parametric estimation. 
 ```{r}
+# Weibull AFT model 
 m1 = survreg( Surv(stag,event) ~ gender+age+ factor(profession)+ head_gender + way + independ + selfcontrol, dist='weibull', data=Employ )
-summary(m2)
+summary(m1)
+```
+
+```{r}
+# AIC for Weibull model 
+2*(23-(-2982.1 ))
 ```
 
 
+The AIC score for Weibull model is 6010.2. 
+
 ```{r}
+# Log-normal model 
 m2 = survreg( Surv(stag,event) ~ gender+age+ factor(profession)+ head_gender + way + independ + selfcontrol, dist='lognormal', data=Employ )
+summary(m2)
+```
+
+```{r}
+#AIC for log-normal model 
+2*(23-(-2982.5))
+```
+The AIC score for log-normal model is 6011.
+
+```{r}
+# Exponential model
+m3 = survreg( Surv(stag,event) ~ gender+age+ factor(profession)+ head_gender + way + independ + selfcontrol, dist='exponential', data=Employ )
 summary(m3)
 ```
 
 ```{r}
-m3 = survreg( Surv(stag,event) ~ gender+age+ factor(profession)+ head_gender + way + independ + selfcontrol, dist='exponential', data=Employ )
-summary(m2)
+# AIC for Exponential model 
+2*(22-(-2987 ))
+```
+The AIC score for Exponential model is 6018.
+
+```{r}
+stargazer(m1, m2, m3, title=" Results",
+align=TRUE, dep.var.labels=c("Survival time (length of service)"),
+covariate.labels=c("gender","age",
+"BusinessDevelopment","Commercial ","Consult","Engineer", "etc ","Finan\xf1e","HR ","IT","Law","manage","Marketing","PR","Sales", "Teaching","head_genderm ","waycar","wayfoot","independ","selfcontrol "),
+omit.stat=c("LL","ser","f"), no.space=TRUE)
+```
+
+
+##### Variable Selection. 
+We find out that Weibull model is the best model for parametric estimation. Next, we want to investigate the appropriate set of variables for our Weibull model. 
+
+First, we have the original set of parameters. Next, we are going to exclude `head-gender`, `independ`, and `gender`, which have the largest P-value (insignificance) in our Weibull model. The AIC score of the model is 6006.2, which is lower than the original Weibull model that has all the parameters. Then we find out that some of the parameters in `profession` has high P-value, so we want to see if the model without `profession` has a lower AIC or not. It turns out that the most appropriate set of parameters are `age`, `way`, `selfcontrol`, since the model has the lowest AIC (6005.6). 
+
+
+```{r}
+m4 = survreg( Surv(stag,event) ~ age+ factor(profession) + way + selfcontrol, dist='weibull', data=Employ )
+summary(m4)
+```
+
+```{r}
+2*(20-(-2983.1 ))
+```
+
+Then we find out that some of the parameters in `profession` has high P-value, so we want to see if the model without `profession` has a lower AIC or not. 
+```{r}
+m5 = survreg( Surv(stag,event) ~ age + way + selfcontrol, dist='weibull', data=Employ )
+summary(m5)
+```
+
+```{r}
+2*(6-(-2996.8 ))
 ```
 
 
 #### Non-Parametric Estimation
 
+For better graphs, we need to make the age range and selfcontrol range .....
+conclusion.....
 ```{r}
-m4 = survfit( Surv(stag,event) ~ gender+age+ factor(profession)+ head_gender + way + independ + selfcontrol, data=Employ  )
-summary(m4)
+Employ$ageCat = cut(Employ$age, c(0, 20, 30, 40, 50, 60))
+Employ$scCat = cut(Employ$selfcontrol, c(0, 2, 4, 6, 8 , 10))
+m6 = survfit( Surv(stag,event) ~ageCat+ way + scCat, data=Employ  )
+ggsurvplot(m6)
 
 ```
+
 
 
 #### Semi-parametric Approach: CoxPH 
 
 why results do not match residual plot? cancel out?  why profession has time-varying effect? 
 ```{r}
-m5 = coxph( Surv(stag,event) ~  gender+age+ factor(profession)+ head_gender + way + independ + selfcontrol, data=Employ  )
-summary(m5)
+m7 = coxph( Surv(stag,event) ~  age + way + selfcontrol, data=Employ  )
+summary(m7)
 
-cox.zph(m5)
-plot(cox.zph(m5))
+cox.zph(m7)
+plot(cox.zph(m7))
 ```
 
-```{r}
-m6 = coxph( Surv(start,stop, event) ~  age + age:stop , data=Employ )
-```
-
-
+not enough for sc and age 
 
 ### Conclusion
 
