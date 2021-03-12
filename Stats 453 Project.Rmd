@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r}
+```{r,message=FALSE}
 library(dplyr)
 library(stargazer)
 library(survival)
@@ -62,13 +62,7 @@ m1 = survreg( Surv(stag,event) ~ gender+age+ factor(profession)+ head_gender + w
 summary(m1)
 ```
 
-```{r}
-# AIC for Weibull model 
-2*(23-(-2982.1 ))
-```
 
-
-The AIC score for Weibull model is 6010.2. 
 
 ```{r}
 # Log-normal model 
@@ -76,11 +70,6 @@ m2 = survreg( Surv(stag,event) ~ gender+age+ factor(profession)+ head_gender + w
 summary(m2)
 ```
 
-```{r}
-#AIC for log-normal model 
-2*(23-(-2982.5))
-```
-The AIC score for log-normal model is 6011.
 
 ```{r}
 # Exponential model
@@ -88,11 +77,6 @@ m3 = survreg( Surv(stag,event) ~ gender+age+ factor(profession)+ head_gender + w
 summary(m3)
 ```
 
-```{r}
-# AIC for Exponential model 
-2*(22-(-2987 ))
-```
-The AIC score for Exponential model is 6018.
 
 ```{r}
 stargazer(m1, m2, m3, title=" Results",
@@ -101,22 +85,27 @@ covariate.labels=c("gender","age",
 "BusinessDevelopment","Commercial ","Consult","Engineer", "etc ","Finan\xf1e","HR ","IT","Law","manage","Marketing","PR","Sales", "Teaching","head_genderm ","waycar","wayfoot","independ","selfcontrol "),
 omit.stat=c("LL","ser","f"), no.space=TRUE)
 ```
+```{r}
+AIC <- tibble(
+  Model = c("Exponential", "Weibull", "Lognormal"),
+  AIC = c(6018,6010.2,6011)
+  )
+AIC
+```
 
+Since the AIC score of the Weibull model is the smallest, we would continue our analysis using Weibull distribution.
 
 ##### Variable Selection. 
 We find out that Weibull model is the best model for parametric estimation. Next, we want to investigate the appropriate set of variables for our Weibull model. 
 
-First, we have the original set of parameters. Next, we are going to exclude `head-gender`, `independ`, and `gender`, which have the largest P-value (insignificance) in our Weibull model. The AIC score of the model is 6006.2, which is lower than the original Weibull model that has all the parameters. Then we find out that some of the parameters in `profession` has high P-value, so we want to see if the model without `profession` has a lower AIC or not. It turns out that the most appropriate set of parameters are `age`, `way`, `selfcontrol`, since the model has the lowest AIC (6005.6). 
-
+First, we have the original set of parameters. Next, we are going to assess if we should include `head-gender`, `independ`, and `gender`, which have the largest P-value (insignificance) in our Weibull model. Then, we would use the AIC test to determine whether we should include these variables. 
 
 ```{r}
 m4 = survreg( Surv(stag,event) ~ age+ factor(profession) + way + selfcontrol, dist='weibull', data=Employ )
 summary(m4)
 ```
 
-```{r}
-2*(20-(-2983.1 ))
-```
+The AIC score of simpler model is 6006.2, which is lower than the original Weibull model that has all parameters. However, we still find out that some of the parameters in `profession` has high P-value, and 'profession' generates 14 parameters because it is categorical. Therefore, we also want to see we should incorporate 'profession' in our model. 
 
 Then we find out that some of the parameters in `profession` has high P-value, so we want to see if the model without `profession` has a lower AIC or not. 
 ```{r}
@@ -124,37 +113,55 @@ m5 = survreg( Surv(stag,event) ~ age + way + selfcontrol, dist='weibull', data=E
 summary(m5)
 ```
 
+
 ```{r}
-2*(6-(-2996.8 ))
+AIC_w=tibble(
+  Model = c("All predictors", "age, profession,way,self control", "age, way, self control"),
+  AIC = c(6010.2,6006.2,6005.6)
+  )
+AIC_w
 ```
 
+According to the AIC score of all three models, we think that it is reasonable to include age, way, and self control in our model because its AIC score is the smallest. Based on this information, we would continue our analysis with these variables in the non-parametric and semi-parametric settings.
 
 #### Non-Parametric Estimation
 
-For better graphs, we need to make the age range and selfcontrol range .....
-conclusion.....
+Informed by our parametric models, we would explore the effect of age, way, and self-control on the survival time from the non-parametric perspective.
+
 ```{r}
-Employ$ageCat = cut(Employ$age, c(0, 20, 30, 40, 50, 60))
-Employ$scCat = cut(Employ$selfcontrol, c(0, 2, 4, 6, 8 , 10))
-m6 = survfit( Surv(stag,event) ~ageCat+ way + scCat, data=Employ  )
+Employ$ageCat = cut(Employ$age, c(0, 20,  40,  60))
+Employ$scCat = cut(Employ$selfcontrol, c(0, 4,  8 , 10))
+m6 = survfit( Surv(stag,event) ~ageCat, data=Employ  )
 ggsurvplot(m6)
 
 ```
+According to the graph above, it is clear that the length of service can be affected by the age of the employees. On average, we would expect the employment turnover rate of the younger people to be the lowest; and it is possible that the turnover rate increases as one gets older. However, since we cut the continuous variable into three categories, we don't know if it is true that the increase in age would necessarily lead to the increase in employment turnover rate.
 
+```{r}
+m7 = survfit( Surv(stag,event) ~ way , data=Employ  )
+ggsurvplot(m7)
+```
+According to the graph above, we can see that at the first ten months approximately, the length of service of employees using different transportions is similar. However, as they work longer, people who go to work by bus seem to be more likely to leave their companies; and people who walk to work are the least likely to leave. It is possible that people who walk to their workplace also live closer to their companies; and the shorter distance would make them less likely to leave or relocate. For people who take bus or drive to work, we might expect their distance to companies is further; thus, their willingess to leave the company might be higher.
+
+```{r}
+m8 = survfit( Surv(stag,event) ~ scCat, data=Employ  )
+ggsurvplot(m8)
+```
 
 
 #### Semi-parametric Approach: CoxPH 
 
-why results do not match residual plot? cancel out?  why profession has time-varying effect? 
-```{r}
-m7 = coxph( Surv(stag,event) ~  age + way + selfcontrol, data=Employ  )
-summary(m7)
+[introduce COX PH and hazard ratio concepts]
 
-cox.zph(m7)
-plot(cox.zph(m7))
+```{r}
+m9 = coxph( Surv(stag,event) ~  age + way + selfcontrol, data=Employ  )
+summary(m9)
+
+cox.zph(m9)
+plot(cox.zph(m9))
 ```
 
-not enough for sc and age 
+According to the test on the PH assumption, neither of them is significant because their p-value are very large. This is also consistent with the residual plot as the fitted curves are relatively flat over time. However, the curve for age seems to go down at the end, and we might have a different conclusion if we could have more observations. Therefore, neither of them seems to have a time-varying effect, but it could also due to the limited number of observations. 
 
 ### Conclusion
 
